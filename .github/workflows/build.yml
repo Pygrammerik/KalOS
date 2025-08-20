@@ -1,6 +1,16 @@
 name: Build KalOS ISO
 
 on:
+  workflow_dispatch:
+    inputs:
+      kernel_version:
+        description: "Linux kernel version (e.g. 6.6.35)"
+        required: false
+        default: "6.6.35"
+      busybox_version:
+        description: "BusyBox version (e.g. 1.36.1)"
+        required: false
+        default: "1.36.1"
   push:
     paths:
       - 'KalOS/**'
@@ -16,9 +26,11 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
-      KERNEL_VERSION: 6.6.35
-      BUSYBOX_VERSION: 1.36.1
+      KERNEL_VERSION: ${{ github.event.inputs.kernel_version || '6.6.35' }}
+      BUSYBOX_VERSION: ${{ github.event.inputs.busybox_version || '1.36.1' }}
       DOCKER_BUILDKIT: 1
     steps:
       - name: Checkout
@@ -44,8 +56,6 @@ jobs:
 
       - name: Upload release asset (on tag)
         if: startsWith(github.ref, 'refs/tags/')
-        permissions:
-          contents: write
         uses: softprops/action-gh-release@v2
         with:
           files: KalOS/out/kalos.iso
