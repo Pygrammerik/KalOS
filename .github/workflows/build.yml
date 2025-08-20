@@ -1,0 +1,53 @@
+name: Build KalOS ISO
+
+on:
+  push:
+    paths:
+      - 'KalOS/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+    paths:
+      - 'KalOS/**'
+      - '.github/workflows/build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KERNEL_VERSION: 6.6.35
+      BUSYBOX_VERSION: 1.36.1
+      DOCKER_BUILDKIT: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache downloads (kernel/busybox tarballs)
+        uses: actions/cache@v4
+        with:
+          path: KalOS/downloads
+          key: kalos-downloads-${{ env.KERNEL_VERSION }}-${{ env.BUSYBOX_VERSION }}-${{ hashFiles('KalOS/Dockerfile', 'KalOS/build/build.sh') }}
+
+      - name: Build ISO via Docker/Make
+        working-directory: KalOS
+        run: |
+          make iso KERNEL_VERSION=${KERNEL_VERSION} BUSYBOX_VERSION=${BUSYBOX_VERSION}
+
+      - name: Upload artifact (kalos.iso)
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalos-iso
+          path: KalOS/out/kalos.iso
+          if-no-files-found: error
+
+      - name: Upload release asset (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        permissions:
+          contents: write
+        uses: softprops/action-gh-release@v2
+        with:
+          files: KalOS/out/kalos.iso
+
+
