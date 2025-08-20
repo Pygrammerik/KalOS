@@ -59,7 +59,9 @@ if grep -q -E '^(# CONFIG_INSTALL_APPLET_SYMLINKS is not set|CONFIG_INSTALL_APPL
     mv "$tmpcfg" .config
 fi
 
+set +o pipefail
 yes "" | make oldconfig >/dev/null
+set -o pipefail
 make -j"$(nproc)" >/dev/null
 
 ROOTFS_DIR="$WORK_DIR/rootfs"
