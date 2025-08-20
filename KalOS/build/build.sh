@@ -46,8 +46,20 @@ fi
 pushd "$BUSYBOX_BUILD" >/dev/null
 echo "==> Configure busybox (static)"
 make defconfig >/dev/null
-sed -ri 's/^#?\s*CONFIG_STATIC.*/CONFIG_STATIC=y/' .config
-sed -ri 's/^#?\s*CONFIG_INSTALL_APPLET_SYMLINKS.*/CONFIG_INSTALL_APPLET_SYMLINKS=y/' .config || true
+# Жёстко задаём единичные значения без дублей в .config
+tmpcfg=".config.tmp"
+grep -v -E '^(# CONFIG_STATIC is not set|CONFIG_STATIC=)' .config > "$tmpcfg" || true
+printf 'CONFIG_STATIC=y\n' >> "$tmpcfg"
+mv "$tmpcfg" .config
+
+# Предпочитаем симлинки для апплетов, если опция присутствует в дефконфиге
+if grep -q -E '^(# CONFIG_INSTALL_APPLET_SYMLINKS is not set|CONFIG_INSTALL_APPLET_SYMLINKS=)' .config; then
+    grep -v -E '^(# CONFIG_INSTALL_APPLET_SYMLINKS is not set|CONFIG_INSTALL_APPLET_SYMLINKS=)' .config > "$tmpcfg" || true
+    printf 'CONFIG_INSTALL_APPLET_SYMLINKS=y\n' >> "$tmpcfg"
+    mv "$tmpcfg" .config
+fi
+
+yes "" | make olddefconfig >/dev/null
 make -j"$(nproc)" >/dev/null
 
 ROOTFS_DIR="$WORK_DIR/rootfs"
