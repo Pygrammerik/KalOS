@@ -42,6 +42,11 @@ jobs:
           path: KalOS/downloads
           key: kalos-downloads-${{ env.KERNEL_VERSION }}-${{ env.BUSYBOX_VERSION }}-${{ hashFiles('KalOS/Dockerfile', 'KalOS/build/build.sh') }}
 
+      - name: Ensure scripts are executable
+        run: |
+          chmod +x KalOS/build/build.sh || true
+          chmod +x KalOS/initramfs/init || true
+
       - name: Build ISO via Docker/Make
         working-directory: KalOS
         run: |

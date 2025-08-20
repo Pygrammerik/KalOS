@@ -17,7 +17,7 @@ iso: build-image
 	$(DOCKER) run --rm -v ${PWD}:/src -w /src \
 		-e KERNEL_VERSION=$(KERNEL_VERSION) \
 		-e BUSYBOX_VERSION=$(BUSYBOX_VERSION) \
-		$(IMAGE_NAME) bash -lc "/src/build/build.sh"
+		$(IMAGE_NAME) bash -lc "bash /src/build/build.sh"
 
 run-qemu: $(TARGET_ISO)
 	qemu-system-x86_64 -m 512 -cdrom $(TARGET_ISO) -boot d -serial mon:stdio
